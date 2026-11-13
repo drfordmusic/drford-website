@@ -391,3 +391,5 @@ p{text-wrap:pretty}
 .ab-progress span{display:block;height:100%;background:var(--brass);transform:scaleX(0);transform-origin:left}
 .ab-status{margin-top:12px;min-height:1.2em;font-size:13px}
 .ab-soon{opacity:.6}
+
+.legal{max-width:720px}.legal h2{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.25;margin:48px 0 12px}.legal p,.legal li{line-height:1.65;max-width:680px}.legal p{margin:0 0 14px}.legal ul{padding-left:20px;margin:0 0 16px;list-style:disc}.legal li{margin:8px 0}.legal .lede{margin-top:16px}

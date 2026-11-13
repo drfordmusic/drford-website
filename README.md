@@ -22,5 +22,5 @@ Plain static HTML, CSS and JavaScript. There is no build step and nothing to ins
 1. **Formspree:** replace `YOUR_FORM_ID` in `index.html` and `contact/index.html` with the real form ID. Until then, the forms show "Preview only."
 2. **Security headers:** set them on the host, including a Content-Security-Policy with `connect-src 'self' https://formspree.io`.
 3. **Redirects:** send `/contact-us` and `/contact.html` to `/contact/`.
-4. **Privacy policy:** add `/privacy/` and link it in every footer. This is pending approval.
+4. **Privacy policy:** live at `/privacy/`. Set the host to delete server logs after 90 days, as the policy promises.
 5. **Permissions:** get each artist's approval for the Before/After audio before the site goes public.
