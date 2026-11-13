@@ -15,7 +15,7 @@ Plain static HTML, CSS and JavaScript. There is no build step and nothing to ins
 | `audio/` | Before/After clips: AAC `.mp4`, with Opus `.webm` as a fallback |
 | `css/`, `js/` | Styles and behavior. The file names carry a content hash, so browsers can cache them indefinitely. |
 | `img/`, `fonts/` | Images (AVIF, WebP and JPEG) and self-hosted fonts (OFL licensed) |
-| `robots.txt`, `llms.txt`, `sitemap.xml` | Search and AI visibility. AI training crawlers are blocked; search and AI-answer bots are allowed. |
+| `robots.txt`, `llms.txt`, `sitemap.xml` | Search and AI visibility. Search and AI-answer bots are allowed everywhere. ChatGPT, Claude and Apple training crawlers may read text but not `/audio/` or `/img/`; other training crawlers are blocked. |
 
 ## Before launch
 

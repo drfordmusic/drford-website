@@ -1,8 +1,9 @@
 # drford.com crawler policy
-# Search engines and AI-answer bots: allowed (this is how people find Daniel).
-# AI model-training crawlers: blocked (decided by Daniel, October 15, 2026).
-# Blocking training crawlers does not affect Google Search, AI Overviews,
-# ChatGPT Search, Claude, Perplexity, Siri or Spotlight.
+# Search engines and AI-answer bots: allowed everywhere (this is how people find Daniel).
+# AI-assistant training crawlers (ChatGPT, Claude, Apple): allowed to learn from the
+#   site's text so the models know who Dr. Ford is, but NOT from client audio or photos
+#   (decided by Daniel, November 13, 2026; replaces the October 15 full block).
+# Other training-only crawlers: blocked.
 
 User-agent: Googlebot
 User-agent: Bingbot
@@ -17,11 +18,17 @@ User-agent: Perplexity-User
 Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 
-# Training-only crawlers
+# AI-assistant training: text yes, audio and photos no
 User-agent: GPTBot
 User-agent: ClaudeBot
-User-agent: CCBot
 User-agent: Applebot-Extended
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+Disallow: /audio/
+Disallow: /img/
+Allow: /
+
+# Other training-only crawlers
+User-agent: CCBot
 User-agent: Bytespider
 User-agent: meta-externalagent
 User-agent: cohere-training-data-crawler
