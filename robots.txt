@@ -1,0 +1,35 @@
+# drford.com crawler policy
+# Search engines and AI-answer bots: allowed (this is how people find Daniel).
+# AI model-training crawlers: blocked (decided by Daniel, October 15, 2026).
+# Blocking training crawlers does not affect Google Search, AI Overviews,
+# ChatGPT Search, Claude, Perplexity, Siri or Spotlight.
+
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Applebot
+User-agent: DuckDuckBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+
+# Training-only crawlers
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: CCBot
+User-agent: Applebot-Extended
+User-agent: Bytespider
+User-agent: meta-externalagent
+User-agent: cohere-training-data-crawler
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Disallow: /
+
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+
+Sitemap: https://www.drford.com/sitemap.xml
