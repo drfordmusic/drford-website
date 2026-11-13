@@ -1,0 +1,22 @@
+# After each push to main, wait for the host to finish deploying, then tell
+# Bing/Copilot (IndexNow) which pages changed. Turned off until the site is live:
+# set the repository variable SITE_LIVE to "true" (Settings > Secrets and variables
+# > Actions > Variables) once drford.com points at the new host.
+name: IndexNow
+on:
+  push:
+    branches: [main]
+jobs:
+  ping:
+    if: vars.SITE_LIVE == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Wait for the deploy to finish
+        run: sleep 120
+      - name: Submit changed pages
+        run: |
+          FILES=$(git diff --name-only HEAD~1 HEAD || true)
+          python3 .github/scripts/indexnow.py $FILES

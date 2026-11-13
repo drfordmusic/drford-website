@@ -1,0 +1,32 @@
+# Response headers for Netlify and Cloudflare Pages (both read this file).
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; media-src 'self'; connect-src 'self' https://formspree.io; form-action 'self' https://formspree.io; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  X-Frame-Options: DENY
+
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+/img/*
+  Cache-Control: public, max-age=2592000
+/audio/*
+  Cache-Control: public, max-age=2592000
+
+# Keep the machine-readable files out of search results (crawlers can still read them).
+/llms.txt
+  X-Robots-Tag: noindex
+/4be1f8c6f36ab0d89e3d43a5abcd29f6.txt
+  X-Robots-Tag: noindex
+
+# Ad landing pages: noindex (also in their HTML). Not blocked in robots.txt on purpose,
+# so crawlers can see the noindex.
+/go/*
+  X-Robots-Tag: noindex
+

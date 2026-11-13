@@ -1,0 +1,8 @@
+# Redirects for Netlify and Cloudflare Pages (both read this file).
+# /contact is printed on banners and QR codes: it must always resolve in ONE hop.
+
+/contact-us         /contact/   301
+/contact-us/        /contact/   301
+/contact.html       /contact/   301
+/privacy-policy     /privacy/   301
+/privacy-policy/    /privacy/   301
