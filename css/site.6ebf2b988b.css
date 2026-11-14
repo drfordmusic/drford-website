@@ -528,3 +528,15 @@ p{text-wrap:pretty}
 @media (hover:hover) and (pointer:fine){.offer-link:hover{border-color:var(--room)}}
 @media (max-width:900px){.offers{grid-template-columns:1fr 1fr}.offer-main{grid-column:1/-1}}
 @media (max-width:560px){.offers{grid-template-columns:1fr;margin-top:40px}}
+
+/* ---------- One spacing rhythm for every section ----------
+   --pad is the space between a section's edge and its content. Where two sections share
+   a background, the second one starts closer, so the gap between them matches the rest. */
+:root{--pad:clamp(64px,7vw,104px)}
+main > section.section,main > section > .section{padding-block:var(--pad)}
+.section-room{padding-top:var(--pad);padding-bottom:calc(var(--pad) - 16px)}
+.pin-h-stage,.no-pin .pin-h-stage{padding-block:var(--pad)}
+#listen > .wrap.section{padding-bottom:calc(var(--pad) * .5)}
+#listen .listen-hero{padding-bottom:var(--pad)}
+#room,#faq{padding-top:calc(var(--pad) * .5)}
+#story .pin-h-stage{padding-bottom:calc(var(--pad) - 34px)}
