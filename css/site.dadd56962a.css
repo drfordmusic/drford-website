@@ -465,3 +465,6 @@ p{text-wrap:pretty}
   .band-grid figcaption strong{font-size:18px;line-height:1.2}
   .band-grid figcaption span{font-size:13px;line-height:1.35}
 }
+
+/* Console photo now closes the Before/After section */
+#listen .listen-hero{padding-bottom:clamp(12px,2vw,24px)}
