@@ -95,6 +95,12 @@
     });
   });
 
+
+  /* ---------- Offer buttons tell the consultation form which service was picked ---------- */
+  $$('[data-service]').forEach(function (a) {
+    a.addEventListener('click', function () { var f = $('#service'); if (f) f.value = a.getAttribute('data-service'); });
+  });
+
   /* ---------- Before / after player: two versions in sync, switch at the same spot ---------- */
   var AC = window.AudioContext || window.webkitAudioContext;
   var abActive = null;

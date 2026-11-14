@@ -546,3 +546,11 @@ main > section.section,main > section > .section{padding-block:var(--pad)}
 #room .muted,#room figcaption{color:var(--room-text)}
 #room .note-card{background:var(--room-deep);border:1px solid var(--room-line)}
 @media (max-width:760px){#room .gallery{scroll-padding-inline:var(--gutter)}}
+
+/* ---------- Three equal offerings, each with its own button ---------- */
+.offers{grid-template-columns:repeat(3,minmax(0,1fr))}
+.offers .offer{background:var(--room);color:var(--cream);border-color:var(--room)}
+.offers .offer-kicker{color:var(--brass)}
+.offers .offer-price{font-size:clamp(2.6rem,4.4vw,3.8rem)}
+.offers .offer-price em{color:var(--room-text)}
+@media (max-width:900px){.offers{grid-template-columns:1fr}.offers .offer{grid-column:auto}}
