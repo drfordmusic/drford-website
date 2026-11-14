@@ -84,6 +84,17 @@
     });
   }
 
+
+  /* ---------- In the room, or from home ---------- */
+  var whereBtns = $$('[data-where]');
+  whereBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var w = btn.getAttribute('data-where');
+      whereBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+      $$('[data-where-panel]').forEach(function (p) { p.hidden = p.getAttribute('data-where-panel') !== w; });
+    });
+  });
+
   /* ---------- Before / after player: two versions in sync, switch at the same spot ---------- */
   var AC = window.AudioContext || window.webkitAudioContext;
   var abActive = null;

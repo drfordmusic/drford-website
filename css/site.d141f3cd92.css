@@ -488,3 +488,14 @@ p{text-wrap:pretty}
 .hello-copy h2{margin-bottom:28px}
 .hello-copy .lede{text-wrap:pretty}
 @media (max-width:640px){.hello-copy h2{margin-bottom:20px}.hello-copy .lede{font-size:19px;line-height:1.6}.hello-copy .lede+.lede{margin-top:18px}}
+
+/* ---------- In the room, or from home: two paths, 2x2 cards ---------- */
+.where-toggle{display:flex;gap:8px;margin:0 0 20px}
+.where-toggle .toggle{flex:1 1 0;width:auto;max-width:220px}
+#process .process{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+#process .process li{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px}
+#process .process strong{font-size:21px;margin:8px 0 6px}
+#process .process li p:last-child{font-size:15px;line-height:1.5}
+#process .process[hidden]{display:none}
+@media (max-width:900px){#process .process{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){#process .process li{padding:14px}#process .process strong{font-size:18px;margin:6px 0 4px}#process .process li p:last-child{font-size:14px;line-height:1.45}#process .process-intro{margin-bottom:28px}}
