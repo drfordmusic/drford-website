@@ -499,3 +499,14 @@ p{text-wrap:pretty}
 #process .process[hidden]{display:none}
 @media (max-width:900px){#process .process{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){#process .process li{padding:14px}#process .process strong{font-size:18px;margin:6px 0 4px}#process .process li p:last-child{font-size:14px;line-height:1.45}#process .process-intro{margin-bottom:28px}}
+
+/* ---------- Price card: the first sell ---------- */
+.price{align-items:flex-start;gap:28px 48px}
+.price-main{flex:1 1 360px}
+.price-side{flex:1 1 320px}
+.price-kicker{color:var(--brass);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 18px}
+.price .from{line-height:1}
+.price .from em{display:inline-block;font-size:.3em;font-style:italic;color:var(--room-text);margin-left:.25em;vertical-align:.35em}
+.price-pitch{font-family:var(--serif);font-weight:300;font-size:clamp(1.3rem,2.2vw,1.7rem);line-height:1.35;margin-top:20px;color:var(--cream)}
+.price .desc{margin:4px 0 26px;font-size:16px;line-height:1.6}
+@media (max-width:640px){.price .from em{display:block;margin:10px 0 0;vertical-align:0;font-size:.32em}}
