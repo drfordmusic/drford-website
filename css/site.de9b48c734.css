@@ -393,3 +393,75 @@ p{text-wrap:pretty}
 .ab-soon{opacity:.6}
 
 .legal{max-width:720px}.legal h2{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.25;margin:48px 0 12px}.legal p,.legal li{line-height:1.65;max-width:680px}.legal p{margin:0 0 14px}.legal ul{padding-left:20px;margin:0 0 16px;list-style:disc}.legal li{margin:8px 0}.legal .lede{margin-top:16px}
+
+/* ---------- The session: lane switches (November 13, 2026) ---------- */
+.session-grid{display:flex;flex-wrap:wrap;gap:40px;align-items:center}
+.session-copy{flex:1 1 320px;min-width:0}
+.session-lede{color:var(--room-text);font-size:17px;line-height:1.55;margin-top:18px;max-width:46ch}
+#session .console{flex:999 1 560px}
+#session .console-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.session-play{width:52px;height:52px;border-radius:50%;border:0;background:var(--brass);color:var(--room);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .16s var(--ease-out)}
+.session-play:active{transform:scale(.96)}
+.session-play .i-pause,.is-playing .session-play .i-play{display:none}
+.is-playing .session-play .i-pause{display:block}
+.session-clock{color:var(--room-muted);font-size:13px}
+.session-quick{display:flex;gap:8px;margin-left:auto}
+.chip-btn{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--room-line);background:transparent;color:var(--cream);font:inherit;font-size:14px;cursor:pointer}
+#session .lanes{gap:6px}
+#session .lane{opacity:1;transform:none;width:100%;min-height:52px;border:0;border-radius:12px;padding:4px 8px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background-color .2s}
+#session .lane.on{background:rgba(207,169,107,.07)}
+.lane-switch{flex:0 0 34px;height:20px;border-radius:10px;background:var(--room-line);position:relative;transition:background-color .2s}
+.lane-switch::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--room-muted);transition:transform .2s var(--ease-out),background-color .2s}
+.lane.on .lane-switch{background:var(--brass)}
+.lane.on .lane-switch::after{transform:translateX(14px);background:var(--room)}
+#session .lane-name{flex:0 0 112px;display:flex;flex-direction:column;gap:1px;font-family:inherit;font-size:14px;letter-spacing:0;color:var(--cream);transition:opacity .2s}
+#session .lane-name b{font-weight:500}
+#session .lane-name span{font-family:var(--mono);font-size:12px;color:var(--room-muted)}
+#session .lane:not(.on) .lane-name{opacity:.55}
+#session .wave{position:relative;height:40px}
+#session .wave i{background:var(--room-text);transition:background-color .25s,opacity .25s}
+#session .lane.on[data-stem="memo"] .wave i{background:var(--brass)}
+#session .lane:not(.on) .wave i{background:var(--room-line)}
+#session .is-playing .wave::after,#session.is-playing .wave::after{content:""}
+.is-playing .wave::after{content:"";position:absolute;top:0;bottom:0;left:var(--ph,0%);width:2px;background:var(--cream);opacity:.85}
+.session-note{margin-top:14px;color:var(--room-muted);font-size:13px}
+@media (max-width:640px){
+  #session .lane-name{flex-basis:84px;font-size:13px}
+  #session .wave{height:34px}
+  .session-quick{margin-left:0}
+}
+@media (hover:hover) and (pointer:fine){.chip-btn:hover{border-color:var(--room-muted)}#session .lane:hover{background:rgba(242,238,229,.05)}}
+
+/* ---------- Before/After: client stories and press now live here ---------- */
+.listen-stories{margin-top:40px}
+.on-night .story-card{background:rgba(242,238,229,.05);border-color:var(--night-line);color:var(--cream);font-size:21px}
+.on-night .press{color:var(--night-muted)}
+
+/* ---------- Studio: numbers pinned on the photo, gallery swipes on phones ---------- */
+.bleed{position:relative}
+.pins{position:absolute;left:clamp(24px,3vw,40px);right:clamp(24px,3vw,40px);bottom:clamp(16px,2.4vw,32px);display:flex;flex-wrap:wrap;gap:8px;margin:0}
+.pins span{background:rgba(20,42,38,.84);color:var(--cream);border:1px solid rgba(207,169,107,.55);border-radius:999px;padding:8px 14px;font-size:14px;line-height:1.2}
+.pins b{font-family:var(--serif);font-weight:400;font-size:18px;color:#E3C48F}
+@media (max-width:760px){
+  .gallery{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:16px}
+  .gallery figure,.gallery .note-card{flex:0 0 80%;scroll-snap-align:start;margin:0}
+  .gallery img{height:320px}
+  .pins{gap:6px}
+  .pins span{font-size:12px;padding:6px 10px}
+  .pins b{font-size:15px}
+}
+
+/* ---------- Band: 2 across on phones, Daniel last at full width ---------- */
+.band-grid li:last-child{grid-column:1/-1}
+.band-grid li:last-child img{aspect-ratio:4/3;object-position:50% 12%}
+@media (min-width:761px){
+  .band-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .band-grid li:last-child{grid-column:2/span 2}
+}
+@media (max-width:760px){
+  .band-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 12px}
+  .band-grid img{border-radius:12px}
+  .band-grid figcaption{margin-top:8px}
+  .band-grid figcaption strong{font-size:18px;line-height:1.2}
+  .band-grid figcaption span{font-size:13px;line-height:1.35}
+}

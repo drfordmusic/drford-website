@@ -140,25 +140,107 @@
     });
   });
 
-  /* ---------- Waveforms (decorative) ---------- */
+  /* ---------- The session: tap players in and out ----------
+     Each lane is one part of the record. Without stems, the switches only show the idea.
+     With stems (data-stems="audio/session/<song>/" on #console, files <key>.mp4 + .webm),
+     every part plays in sync and loops, the switches fade parts in and out at the same
+     spot, and the waveforms are redrawn from the real audio. */
+  var sessionEl = $('[data-session]');
   var lanes = $$('#lanes .lane');
+  var NB = window.innerWidth < 640 ? 44 : 72;
+  function drawBars(lane, peaks) {
+    var wave = $('.wave', lane), frag = document.createDocumentFragment();
+    wave.textContent = '';
+    peaks.forEach(function (v) {
+      var bar = document.createElement('i');
+      bar.style.height = Math.max(6, Math.round(v * 100)) + '%';
+      frag.appendChild(bar);
+    });
+    wave.appendChild(frag);
+  }
   lanes.forEach(function (lane) {
     var seed = parseFloat(lane.getAttribute('data-seed')), amp = parseFloat(lane.getAttribute('data-amp')), base = parseFloat(lane.getAttribute('data-base'));
-    var wave = $('.wave', lane), frag = document.createDocumentFragment();
-    var n = window.innerWidth < 640 ? 44 : 72;
-    for (var i = 0; i < n; i++) {
-      var v = Math.abs(Math.sin(i * 0.37 + seed) * Math.cos(i * 0.113 + seed * 1.7)) * amp + base;
-      var bar = document.createElement('i');
-      bar.style.height = Math.round(v) + 'px';
-      frag.appendChild(bar);
-    }
-    wave.appendChild(frag);
+    var peaks = [];
+    for (var i = 0; i < NB; i++) peaks.push(clamp((Math.abs(Math.sin(i * 0.37 + seed) * Math.cos(i * 0.113 + seed * 1.7)) * amp + base) / 34, 0, 1));
+    drawBars(lane, peaks);
   });
+  if (sessionEl) (function () {
+    var playBtn = $('.session-play', sessionEl), clockEl = $('.session-clock', sessionEl), note = $('.session-note', sessionEl);
+    var stemBase = sessionEl.getAttribute('data-stems');
+    var ctx = null, bufs = null, gains = {}, srcs = [], startedAt = 0, offset = 0, playing = false, raf = 0, loading = false;
+    function isOn(l) { return l.classList.contains('on'); }
+    function updateNote() {
+      var on = lanes.filter(isOn), memoOnly = on.length === 1 && on[0].getAttribute('data-stem') === 'memo';
+      note.textContent = on.length === lanes.length ? 'Everyone’s in. This is the record.'
+        : memoOnly ? 'Just your voice memo. Now bring the band in.'
+        : on.length === 0 ? 'Silence. Tap a player in.'
+        : on.length + ' of ' + lanes.length + ' parts playing.';
+    }
+    function setLane(l, on) {
+      l.classList.toggle('on', on);
+      l.setAttribute('aria-pressed', String(on));
+      var g = gains[l.getAttribute('data-stem')];
+      if (g) { g.gain.cancelScheduledValues(ctx.currentTime); g.gain.setTargetAtTime(on ? 1 : 0, ctx.currentTime, 0.02); }
+    }
+    lanes.forEach(function (l) { l.addEventListener('click', function () { setLane(l, !isOn(l)); updateNote(); }); });
+    $$('[data-lanes]', sessionEl).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var mode = b.getAttribute('data-lanes');
+        lanes.forEach(function (l) { setLane(l, mode === 'all' || l.getAttribute('data-stem') === mode); });
+        updateNote();
+      });
+    });
+    if (!stemBase || !AC) return;
+    playBtn.hidden = false; clockEl.hidden = false;
+    var probe = document.createElement('audio');
+    var ext = probe.canPlayType('audio/mp4; codecs="mp4a.40.2"') ? '.mp4' : '.webm';
+    function load() {
+      if (bufs || loading) return Promise.resolve();
+      loading = true; note.textContent = 'Loading the session…';
+      ctx = ctx || new AC();
+      return Promise.all(lanes.map(function (l) {
+        return fetch(stemBase + l.getAttribute('data-stem') + ext, { credentials: 'omit' })
+          .then(function (r) { if (!r.ok) throw new Error(); return r.arrayBuffer(); })
+          .then(function (b) { return new Promise(function (res, rej) { ctx.decodeAudioData(b, res, rej); }); });
+      })).then(function (list) {
+        bufs = {}; var all = [], top = 0;
+        lanes.forEach(function (l, k) {
+          bufs[l.getAttribute('data-stem')] = list[k];
+          // Real waveform: loudest point in each slice, scaled against the loudest part in the session.
+          var d = list[k].getChannelData(0), step = Math.floor(d.length / NB), pk = [];
+          for (var i = 0; i < NB; i++) { var m = 0; for (var j = i * step, e = j + step; j < e; j += 64) { var v = Math.abs(d[j]); if (v > m) m = v; } pk.push(m); if (m > top) top = m; }
+          all.push(pk);
+        });
+        lanes.forEach(function (l, k) { drawBars(l, all[k].map(function (v) { return top ? Math.sqrt(v / top) : 0; })); });
+        loading = false; updateNote();
+      }).catch(function () { loading = false; note.textContent = 'Couldn’t load the session. Try again.'; throw new Error('load'); });
+    }
+    function dur() { var m = Infinity; for (var k in bufs) m = Math.min(m, bufs[k].duration); return m; }
+    function now() { return playing ? (offset + ctx.currentTime - startedAt) % dur() : offset; }
+    function fmt(t) { return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0'); }
+    function tick() { var t = now(); sessionEl.style.setProperty('--ph', (t / dur() * 100).toFixed(2) + '%'); clockEl.textContent = fmt(t); if (playing) raf = requestAnimationFrame(tick); }
+    function stopSrcs() { srcs.forEach(function (x) { try { x.stop(); } catch (e) {} }); srcs = []; cancelAnimationFrame(raf); }
+    function play() {
+      if (abActive && abActive !== api) abActive.pause();
+      abActive = api;
+      if (ctx.state === 'suspended') ctx.resume();
+      var t0 = ctx.currentTime + 0.05;
+      lanes.forEach(function (l) {
+        var k = l.getAttribute('data-stem'), src = ctx.createBufferSource(), g = gains[k] = ctx.createGain();
+        src.buffer = bufs[k]; src.loop = true; src.loopEnd = dur();
+        g.gain.value = isOn(l) ? 1 : 0;
+        src.connect(g).connect(ctx.destination); src.start(t0, offset); srcs.push(src);
+      });
+      startedAt = t0; playing = true; sessionEl.classList.add('is-playing'); playBtn.setAttribute('aria-label', 'Pause'); tick();
+    }
+    function pause() { if (!playing) return; offset = now(); playing = false; stopSrcs(); gains = {}; sessionEl.classList.remove('is-playing'); playBtn.setAttribute('aria-label', 'Play'); }
+    var api = { pause: pause };
+    playBtn.addEventListener('click', function () { if (playing) { pause(); return; } load().then(play).catch(function () {}); });
+  })();
 
   /* ---------- Scroll-driven scenes ---------- */
   var header = $('#header');
-  var pinSession = $('#pin-session'), pinStory = $('#pin-story');
-  var steps = $$('#steps p'), consoleEl = $('#console'), stamp = $('#stamp'), pct = $('#pct');
+  var pinStory = $('#pin-story');
   var track = $('#tl-track'), view = $('#tl-view'), tlBar = $('#tl-bar'), tlYear = $('#tl-year');
   var years = $$('#tl-track .yr').map(function (el) { return el.textContent; });
   var heroImg = $('.hero-photo img');
@@ -175,11 +257,6 @@
     doc.classList.toggle('no-pin', !on);
     if (!on) {
       if (track) track.style.transform = '';
-      lanes.forEach(function (l) { l.classList.add('on'); });
-      steps.forEach(function (s, i) { s.classList.toggle('active', true); });
-      if (consoleEl) consoleEl.classList.add('done');
-      if (stamp) stamp.textContent = 'Final master · 3:24';
-      if (pct) pct.textContent = 'Ready';
     }
   }
   setPinned(pinned);
@@ -195,29 +272,6 @@
 
     if (heroImg && y < window.innerHeight * 1.2) {
       heroImg.style.transform = 'translate3d(0,' + (y * -0.08).toFixed(1) + 'px,0)';
-    }
-
-    if (pinSession) {
-      var p = progress(pinSession);
-      if (Math.abs(p - (last.p1 || -1)) > 0.002) {
-        last.p1 = p;
-        var active = p < 0.12 ? 0 : p < 0.34 ? 1 : p < 0.52 ? 2 : p < 0.8 ? 3 : 4;
-        if (active !== last.active) {
-          steps.forEach(function (s, i) { s.classList.toggle('active', i === active); });
-          last.active = active;
-        }
-        lanes.forEach(function (l) {
-          var at = parseFloat(l.getAttribute('data-at'));
-          l.classList.toggle('on', at < 0 || p >= at);
-        });
-        var done = p >= 0.82;
-        if (done !== last.done) {
-          consoleEl.classList.toggle('done', done);
-          stamp.textContent = done ? 'Final master · 3:24' : 'New recording · 0:52';
-          last.done = done;
-        }
-        pct.textContent = done ? 'Ready' : Math.round(p * 100) + '%';
-      }
     }
 
     if (pinStory && track && view) {
