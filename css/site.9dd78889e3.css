@@ -468,3 +468,18 @@ p{text-wrap:pretty}
 
 /* Console photo now closes the Before/After section */
 #listen .listen-hero{padding-bottom:clamp(12px,2vw,24px)}
+
+/* ---------- Timeline: side-scroll everywhere (no scroll-jacking) ---------- */
+.pin-h{height:auto}
+.pin-h-stage{position:static;height:auto;min-height:0;overflow:visible;padding-block:clamp(96px,12vw,140px)}
+.tl-view{overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-padding-inline:max(var(--gutter),calc((100vw - var(--wrap))/2 + var(--gutter)))}
+.tl-view::-webkit-scrollbar{display:none}
+.tl-track{will-change:auto}
+.tl-card{scroll-snap-align:start}
+.tl-bar,.no-pin .tl-bar{display:block}
+.tl-nav{display:flex;gap:8px}
+.tl-nav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--night-line);background:transparent;color:var(--cream);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .2s,border-color .2s}
+.tl-nav button:disabled{opacity:.3;cursor:default}
+@media (hover:hover) and (pointer:fine){.tl-nav button:not(:disabled):hover{border-color:var(--brass)}}
+.tl-head{align-items:center}
+.tl-head .tl-year{margin-left:auto}

@@ -240,7 +240,6 @@
 
   /* ---------- Scroll-driven scenes ---------- */
   var header = $('#header');
-  var pinStory = $('#pin-story');
   var track = $('#tl-track'), view = $('#tl-view'), tlBar = $('#tl-bar'), tlYear = $('#tl-year');
   var years = $$('#tl-track .yr').map(function (el) { return el.textContent; });
   var heroImg = $('.hero-photo img');
@@ -255,9 +254,6 @@
   function setPinned(on) {
     pinned = on;
     doc.classList.toggle('no-pin', !on);
-    if (!on) {
-      if (track) track.style.transform = '';
-    }
   }
   setPinned(pinned);
 
@@ -274,21 +270,32 @@
       heroImg.style.transform = 'translate3d(0,' + (y * -0.08).toFixed(1) + 'px,0)';
     }
 
-    if (pinStory && track && view) {
-      var q = progress(pinStory);
-      if (Math.abs(q - (last.p2 || -1)) > 0.001) {
-        last.p2 = q;
-        var span = Math.max(0, track.scrollWidth - view.clientWidth);
-        track.style.transform = 'translate3d(' + (-q * span).toFixed(1) + 'px,0,0)';
-        tlBar.style.transform = 'scaleX(' + q.toFixed(4) + ')';
-        var idx = Math.min(years.length - 1, Math.floor(q * years.length));
-        if (idx !== last.year) {
-          tlYear.textContent = years[idx] === 'Next' ? 'Next · your record' : years[idx] + ' → today';
-          last.year = idx;
-        }
-      }
-    }
   }
+
+  /* ---------- Timeline: native side-scroll (swipe, trackpad, or the arrow buttons) ---------- */
+  if (track && view) (function () {
+    var cards = $$('.tl-card', track), prev = $('.tl-prev'), next = $('.tl-next'), lastIdx = -1;
+    function update() {
+      var max = view.scrollWidth - view.clientWidth, q = max > 0 ? view.scrollLeft / max : 0;
+      if (tlBar) tlBar.style.transform = 'scaleX(' + q.toFixed(4) + ')';
+      var idx = 0, left = view.getBoundingClientRect().left + view.clientWidth * 0.25;
+      cards.forEach(function (c, i) { if (c.getBoundingClientRect().left <= left) idx = i; });
+      if (q > 0.995) idx = cards.length - 1;
+      if (idx !== lastIdx && tlYear) { tlYear.textContent = years[idx] === 'Next' ? 'Next · your record' : years[idx] + ' → today'; lastIdx = idx; }
+      if (prev) prev.disabled = view.scrollLeft < 4;
+      if (next) next.disabled = view.scrollLeft > max - 4;
+    }
+    function step(dir) {
+      var w = cards[0] ? cards[0].getBoundingClientRect().width + 24 : view.clientWidth * 0.8;
+      view.scrollBy({ left: dir * w, behavior: reduce.matches ? 'auto' : 'smooth' });
+    }
+    if (prev) prev.addEventListener('click', function () { step(-1); });
+    if (next) next.addEventListener('click', function () { step(1); });
+    view.addEventListener('scroll', function () { requestAnimationFrame(update); }, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    update();
+  })();
+
   function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', function () {
