@@ -540,3 +540,9 @@ main > section.section,main > section > .section{padding-block:var(--pad)}
 #listen .listen-hero{padding-bottom:var(--pad)}
 #room,#faq{padding-top:calc(var(--pad) * .5)}
 #story .pin-h-stage{padding-bottom:calc(var(--pad) - 34px)}
+
+/* ---------- Studio section on green, so light and dark sections alternate ---------- */
+#room{background:var(--room);color:var(--cream);padding-top:var(--pad)}
+#room .muted,#room figcaption{color:var(--room-text)}
+#room .note-card{background:var(--room-deep);border:1px solid var(--room-line)}
+@media (max-width:760px){#room .gallery{scroll-padding-inline:var(--gutter)}}
