@@ -511,3 +511,20 @@ p{text-wrap:pretty}
 .price .desc{margin:4px 0 26px;font-size:16px;line-height:1.6}
 @media (max-width:640px){.price .from em{display:block;margin:10px 0 0;vertical-align:0;font-size:.32em}}
 .price{align-items:center}.price-side{flex:0 0 auto}
+
+/* ---------- Three offerings ---------- */
+.offers{margin-top:56px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:16px;align-items:stretch}
+.offer{border-radius:24px;padding:clamp(24px,3vw,36px);background:var(--white);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.offer-main{background:var(--room);color:var(--cream);border-color:var(--room)}
+.offer-kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--walnut);margin:0}
+.offer-main .offer-kicker{color:var(--brass)}
+.offer-name{font-family:var(--serif);font-size:26px;line-height:1.1;margin:4px 0 0}
+.offer-price{font-family:var(--serif);font-weight:300;font-size:clamp(2.4rem,4vw,3.4rem);line-height:1;margin:6px 0 auto}
+.offer-main .offer-price{font-size:clamp(3rem,6vw,5rem)}
+.offer-price em{display:block;font-size:max(15px,.3em);font-style:italic;margin-top:10px;color:var(--muted)}
+.offer-main .offer-price em{color:var(--room-text)}
+.offer .btn,.offer-link{margin-top:22px;align-self:flex-start}
+.offer-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--room);font-weight:500;text-decoration:none;border-bottom:1px solid var(--line)}
+@media (hover:hover) and (pointer:fine){.offer-link:hover{border-color:var(--room)}}
+@media (max-width:900px){.offers{grid-template-columns:1fr 1fr}.offer-main{grid-column:1/-1}}
+@media (max-width:560px){.offers{grid-template-columns:1fr;margin-top:40px}}
