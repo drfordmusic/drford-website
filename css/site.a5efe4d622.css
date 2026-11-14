@@ -510,3 +510,4 @@ p{text-wrap:pretty}
 .price-pitch{font-family:var(--serif);font-weight:300;font-size:clamp(1.3rem,2.2vw,1.7rem);line-height:1.35;margin-top:20px;color:var(--cream)}
 .price .desc{margin:4px 0 26px;font-size:16px;line-height:1.6}
 @media (max-width:640px){.price .from em{display:block;margin:10px 0 0;vertical-align:0;font-size:.32em}}
+.price{align-items:center}.price-side{flex:0 0 auto}
