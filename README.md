@@ -38,3 +38,7 @@ Plain static HTML, CSS and JavaScript. There is no build step and nothing to ins
    ```
    Every line should end in 200.
 4. **Dates:** when a page's content changes, update its footer "Last updated" date, its `dateModified` and its `<lastmod>` in `sitemap.xml` together.
+
+## Timeline photos: house color grade
+
+Every timeline photo gets the same light "warm film" grade: 75% color, a 10% wash of brass (#CFA96B) and +10% contrast. To add one, save it as `img/tl-<id>-520.jpg` and `img/tl-<id>-1040.jpg` (the width in the name) and push. A GitHub Action grades it, makes the `.webp` and `.avif` versions, and records it in `.github/timeline-graded.txt` so it's never graded twice. To run it by hand: `python3 .github/scripts/timeline_grade.py`. Keep the ungraded originals in your own archive, not here.

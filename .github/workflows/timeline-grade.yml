@@ -1,0 +1,28 @@
+# Applies the house color grade to any new timeline photo (img/tl-*.jpg) on push,
+# writes its .webp and .avif versions, and commits the result.
+name: Timeline photo grade
+on:
+  push:
+    branches: [main]
+    paths: ["img/tl-*.jpg"]
+permissions:
+  contents: write
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "pillow>=11.3"
+      - run: python3 .github/scripts/timeline_grade.py
+      - name: Commit graded photos
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+            git add img .github/timeline-graded.txt
+            git commit -m "Grade new timeline photos (house warm-film look)"
+            git push
+          fi
