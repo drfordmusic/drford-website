@@ -483,3 +483,8 @@ p{text-wrap:pretty}
 @media (hover:hover) and (pointer:fine){.tl-nav button:not(:disabled):hover{border-color:var(--brass)}}
 .tl-head{align-items:center}
 .tl-head .tl-year{margin-left:auto}
+
+/* ---------- Intro: breathing room under the headline, calmer body text on phones ---------- */
+.hello-copy h2{margin-bottom:28px}
+.hello-copy .lede{text-wrap:pretty}
+@media (max-width:640px){.hello-copy h2{margin-bottom:20px}.hello-copy .lede{font-size:19px;line-height:1.6}.hello-copy .lede+.lede{margin-top:18px}}
