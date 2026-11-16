@@ -90,9 +90,20 @@
   whereBtns.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var w = btn.getAttribute('data-where');
-      whereBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
-      $$('[data-where-panel]').forEach(function (p) { p.hidden = p.getAttribute('data-where-panel') !== w; });
+      showWhere(w);
     });
+  });
+  // The hidden panel uses hidden="until-found": Find in page can still reach its text.
+  // When it does, the browser reveals it and fires beforematch; switch the toggle to match.
+  function showWhere(w) {
+    whereBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-where') === w)); });
+    $$('[data-where-panel]').forEach(function (p) {
+      if (p.getAttribute('data-where-panel') === w) p.removeAttribute('hidden');
+      else p.setAttribute('hidden', 'until-found');
+    });
+  }
+  $$('[data-where-panel]').forEach(function (p) {
+    p.addEventListener('beforematch', function () { showWhere(p.getAttribute('data-where-panel')); });
   });
 
 
@@ -260,6 +271,8 @@
   var track = $('#tl-track'), view = $('#tl-view'), tlBar = $('#tl-bar'), tlYear = $('#tl-year');
   var years = $$('#tl-track .yr').map(function (el) { return el.textContent; });
   var heroImg = $('.hero-photo img');
+  // Where scroll-driven animations work, the stylesheet moves the hero photo; skip the scroll math here.
+  if (window.CSS && CSS.supports && CSS.supports('(animation-timeline: view()) and (animation-range: entry)')) heroImg = null;
 
   function progress(el) {
     var r = el.getBoundingClientRect();
@@ -292,15 +305,28 @@
   /* ---------- Timeline: native side-scroll (swipe, trackpad, or the arrow buttons) ---------- */
   if (track && view) (function () {
     var cards = $$('.tl-card', track), prev = $('.tl-prev'), next = $('.tl-next'), lastIdx = -1;
+    var tlStatus = $('#tl-status'), queued = false, settleTimer = 0, spokenIdx = 0;
     function update() {
+      queued = false;
       var max = view.scrollWidth - view.clientWidth, q = max > 0 ? view.scrollLeft / max : 0;
       if (tlBar) tlBar.style.transform = 'scaleX(' + q.toFixed(4) + ')';
       var idx = 0, left = view.getBoundingClientRect().left + view.clientWidth * 0.25;
       cards.forEach(function (c, i) { if (c.getBoundingClientRect().left <= left) idx = i; });
       if (q > 0.995) idx = cards.length - 1;
       if (idx !== lastIdx && tlYear) { tlYear.textContent = years[idx] === 'Next' ? 'Next · your record' : years[idx] + ' → today'; lastIdx = idx; }
+      var focused = document.activeElement;
       if (prev) prev.disabled = view.scrollLeft < 4;
       if (next) next.disabled = view.scrollLeft > max - 4;
+      // A button that turns off while it has focus would drop keyboard focus; hand it to the other arrow.
+      if (focused === prev && prev.disabled && next) next.focus();
+      else if (focused === next && next.disabled && prev) prev.focus();
+    }
+    // Screen readers hear where they landed once the scroll comes to rest, not on every frame.
+    function settle() {
+      if (!tlStatus || lastIdx < 0 || lastIdx === spokenIdx) return;
+      spokenIdx = lastIdx;
+      var c = cards[lastIdx], h = $('h3', c);
+      tlStatus.textContent = years[lastIdx] + ': ' + (h ? h.textContent : '') + '. ' + (lastIdx + 1) + ' of ' + cards.length + '.';
     }
     function step(dir) {
       var w = cards[0] ? cards[0].getBoundingClientRect().width + 24 : view.clientWidth * 0.8;
@@ -308,7 +334,11 @@
     }
     if (prev) prev.addEventListener('click', function () { step(-1); });
     if (next) next.addEventListener('click', function () { step(1); });
-    view.addEventListener('scroll', function () { requestAnimationFrame(update); }, { passive: true });
+    view.addEventListener('scroll', function () {
+      if (!queued) { queued = true; requestAnimationFrame(update); }
+      if (!('onscrollend' in window)) { clearTimeout(settleTimer); settleTimer = setTimeout(settle, 150); }
+    }, { passive: true });
+    view.addEventListener('scrollend', settle);
     window.addEventListener('resize', update, { passive: true });
     update();
   })();
@@ -324,10 +354,35 @@
   if (reduce.addEventListener) reduce.addEventListener('change', function () { setPinned(!reduce.matches); last = {}; onScroll(); });
   frame();
 
+  /* ---------- Form errors for screen readers ----------
+     The error text appears in the form's status line. The field it belongs to is marked
+     aria-invalid and points at that line until the visitor fixes it. Required fields start
+     as aria-invalid="false", so no browser calls an untouched empty field an error. */
+  function markInvalid(el, statusEl) {
+    var group = el.type === 'radio' && el.form ? $$('input[type="radio"][name="' + el.name + '"]', el.form) : [el];
+    group.forEach(function (f) {
+      f.setAttribute('aria-invalid', 'true');
+      if (statusEl && statusEl.id) f.setAttribute('aria-describedby', statusEl.id);
+    });
+  }
+  function watchFixes(formEl) {
+    $$('[required]', formEl).forEach(function (f) { if (!f.hasAttribute('aria-invalid')) f.setAttribute('aria-invalid', 'false'); });
+    function check(e) {
+      var f = e.target;
+      if (f.getAttribute('aria-invalid') !== 'true' || !f.checkValidity()) return;
+      var group = f.type === 'radio' ? $$('input[type="radio"][name="' + f.name + '"]', formEl) : [f];
+      group.forEach(function (g) { g.setAttribute('aria-invalid', 'false'); g.removeAttribute('aria-describedby'); });
+    }
+    formEl.addEventListener('input', check);
+    formEl.addEventListener('change', check);
+  }
+
   /* ---------- Short forms (/contact): one step, sent securely ---------- */
   $$('form[data-simple-form]').forEach(function (sf) {
     sf.setAttribute('novalidate', '');
     var st = $('.form-status', sf), btn = $('button[type="submit"]', sf);
+    if (st && !st.id) st.id = (sf.id || 'form') + '-status';
+    watchFixes(sf);
     sf.addEventListener('submit', function (e) {
       e.preventDefault();
       var fields = $$('input, textarea, select', sf);
@@ -335,6 +390,7 @@
         if (!fields[i].checkValidity()) {
           st.classList.add('error');
           st.textContent = fields[i].validationMessage || 'Please check this field.';
+          markInvalid(fields[i], st);
           fields[i].focus();
           return;
         }
@@ -376,6 +432,15 @@
   var backBtn = $('#back'), nextBtn = $('#next'), submitBtn = $('#submit');
   var stepLabel = $('#step-label'), stepName = $('#step-name'), bar = $('#progress'), status = $('#form-status');
   var cur = 0;
+  watchFixes(form);
+  // Each step's heading takes focus when the step changes, so keyboard and screen reader users
+  // start at the top of the new step instead of on a button that just disappeared.
+  function focusStep() {
+    var lg = $('legend', fsteps[cur]);
+    if (!lg) return;
+    lg.setAttribute('tabindex', '-1');
+    lg.focus({ preventScroll: true }); // the form is already scrolled into view
+  }
 
   function show(i) {
     cur = clamp(i, 0, fsteps.length - 1);
@@ -400,6 +465,7 @@
     var msg = el.validationMessage || 'Please check this field.';
     if (el.type === 'radio') msg = 'Please choose one to continue.';
     status.textContent = msg;
+    markInvalid(el, status);
     el.focus();
   }
   nextBtn.addEventListener('click', function () {
@@ -407,11 +473,14 @@
     if (bad) return complain(bad);
     show(cur + 1);
     form.scrollIntoView({ behavior: reduce.matches ? 'auto' : 'smooth', block: 'start' });
+    focusStep();
   });
-  backBtn.addEventListener('click', function () { show(cur - 1); });
+  backBtn.addEventListener('click', function () { show(cur - 1); focusStep(); });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
+    // Enter in a text field before the last step moves on instead of jumping ahead to an error.
+    if (cur < fsteps.length - 1) { nextBtn.click(); return; }
     for (var k = 0; k < fsteps.length; k++) {
       var bad = firstInvalid(fsteps[k]);
       if (bad) { show(k); return complain(bad); }
