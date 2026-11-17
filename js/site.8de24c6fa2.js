@@ -354,24 +354,90 @@
   if (reduce.addEventListener) reduce.addEventListener('change', function () { setPinned(!reduce.matches); last = {}; onScroll(); });
   frame();
 
-  /* ---------- Form errors for screen readers ----------
-     The error text appears in the form's status line. The field it belongs to is marked
-     aria-invalid and points at that line until the visitor fixes it. Required fields start
-     as aria-invalid="false", so no browser calls an untouched empty field an error. */
-  function markInvalid(el, statusEl) {
-    var group = el.type === 'radio' && el.form ? $$('input[type="radio"][name="' + el.name + '"]', el.form) : [el];
-    group.forEach(function (f) {
-      f.setAttribute('aria-invalid', 'true');
-      if (statusEl && statusEl.id) f.setAttribute('aria-describedby', statusEl.id);
-    });
+  /* ---------- Form errors at the field ----------
+     Every problem shows at once: a red outline and a message under the field, written in
+     Daniel's voice. The field points at its message (aria-describedby), so screen readers read
+     it on focus. The message sits inside the label but is hidden from the label's name, so the
+     field is still announced as "Email", not "Email, that email looks incomplete".
+     Each message clears as soon as that field is fixed. */
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function alertIcon() {
+    var svg = document.createElementNS(SVGNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('aria-hidden', 'true');
+    var c = document.createElementNS(SVGNS, 'circle'); c.setAttribute('cx', '12'); c.setAttribute('cy', '12'); c.setAttribute('r', '10');
+    var a = document.createElementNS(SVGNS, 'path'); a.setAttribute('d', 'M12 7v6');
+    var b = document.createElementNS(SVGNS, 'path'); b.setAttribute('d', 'M12 16.5v.5');
+    svg.appendChild(c); svg.appendChild(a); svg.appendChild(b);
+    return svg;
   }
+  function setStatusError(statusEl, text) {
+    statusEl.classList.add('error');
+    var span = document.createElement('span'); span.textContent = text;
+    statusEl.replaceChildren(alertIcon(), span);
+  }
+  function messageFor(f) {
+    var v = f.validity;
+    if (f.type === 'radio') return 'Pick one so I know what we’re making.';
+    if (f.name === 'name') return 'Add your name so I know who I’m talking to.';
+    if (f.name === 'email') return v.valueMissing ? 'Add your email so I can write back.' : 'That email looks incomplete. Try something like name@example.com.';
+    if (f.name === 'message') return 'Tell me a little about your song so I know where to start.';
+    if (f.type === 'url') return 'That link looks incomplete. Paste the whole address, starting with https://.';
+    if (f.type === 'number') return 'Use a number from ' + (f.min || 1) + ' to ' + (f.max || 500) + '.';
+    return f.validationMessage || 'Please check this one.';
+  }
+  function groupOf(f) {
+    return f.type === 'radio' && f.form ? $$('input[type="radio"][name="' + f.name + '"]', f.form) : [f];
+  }
+  var errSeq = 0;
+  function showFieldError(f) {
+    var group = groupOf(f), holder, before = null;
+    if (f.type === 'radio') {
+      holder = f.closest('fieldset');
+      var lg = holder && $('legend', holder);
+      before = lg ? lg.nextSibling : holder.firstChild;
+    } else {
+      holder = f.closest('label') || f.parentElement;
+    }
+    var p = holder.__err;
+    if (!p) {
+      p = document.createElement('p');
+      p.className = 'field-error';
+      p.id = 'field-error-' + (++errSeq);
+      if (f.type !== 'radio') p.setAttribute('aria-hidden', 'true'); // kept out of the label's name; still read as the description
+      holder.insertBefore(p, before);
+      holder.__err = p;
+    }
+    var span = document.createElement('span'); span.textContent = messageFor(f);
+    p.replaceChildren(alertIcon(), span);
+    group.forEach(function (g) { g.setAttribute('aria-invalid', 'true'); g.setAttribute('aria-describedby', p.id); });
+  }
+  function clearFieldError(f) {
+    var group = groupOf(f);
+    var holder = f.type === 'radio' ? f.closest('fieldset') : (f.closest('label') || f.parentElement);
+    if (holder && holder.__err) { holder.__err.remove(); holder.__err = null; }
+    group.forEach(function (g) { g.setAttribute('aria-invalid', 'false'); g.removeAttribute('aria-describedby'); });
+  }
+  // Checks every field in scope, marks each problem, and returns them in page order.
+  function validateScope(scope) {
+    var bad = [], seen = {};
+    $$('input, select, textarea', scope).forEach(function (f) {
+      if (f.type === 'radio') { if (seen[f.name]) return; seen[f.name] = true; }
+      if (f.checkValidity()) { if (f.getAttribute('aria-invalid') === 'true') clearFieldError(f); }
+      else { showFieldError(f); bad.push(f); }
+    });
+    return bad;
+  }
+  var COUNT = ['', 'One quick thing', 'Two quick things', 'Three quick things', 'Four quick things'];
+  function summary(n) { return (COUNT[n] || 'A few quick things') + ' above, then it’s on its way.'; }
   function watchFixes(formEl) {
     $$('[required]', formEl).forEach(function (f) { if (!f.hasAttribute('aria-invalid')) f.setAttribute('aria-invalid', 'false'); });
     function check(e) {
       var f = e.target;
       if (f.getAttribute('aria-invalid') !== 'true' || !f.checkValidity()) return;
-      var group = f.type === 'radio' ? $$('input[type="radio"][name="' + f.name + '"]', formEl) : [f];
-      group.forEach(function (g) { g.setAttribute('aria-invalid', 'false'); g.removeAttribute('aria-describedby'); });
+      clearFieldError(f);
+      var st = $('.form-status', formEl);
+      if (st && st.classList.contains('error') && !$('[aria-invalid="true"]', formEl)) { st.classList.remove('error'); st.textContent = ''; }
     }
     formEl.addEventListener('input', check);
     formEl.addEventListener('change', check);
@@ -385,15 +451,11 @@
     watchFixes(sf);
     sf.addEventListener('submit', function (e) {
       e.preventDefault();
-      var fields = $$('input, textarea, select', sf);
-      for (var i = 0; i < fields.length; i++) {
-        if (!fields[i].checkValidity()) {
-          st.classList.add('error');
-          st.textContent = fields[i].validationMessage || 'Please check this field.';
-          markInvalid(fields[i], st);
-          fields[i].focus();
-          return;
-        }
+      var bad = validateScope(sf);
+      if (bad.length) {
+        setStatusError(st, summary(bad.length));
+        bad[0].focus();
+        return;
       }
       if (sf.action.indexOf('YOUR_FORM_ID') !== -1) {
         st.classList.remove('error');
@@ -455,22 +517,10 @@
     status.textContent = '';
     status.classList.remove('error');
   }
-  function firstInvalid(scope) {
-    var els = $$('input, select, textarea', scope);
-    for (var i = 0; i < els.length; i++) { if (!els[i].checkValidity()) return els[i]; }
-    return null;
-  }
-  function complain(el) {
-    status.classList.add('error');
-    var msg = el.validationMessage || 'Please check this field.';
-    if (el.type === 'radio') msg = 'Please choose one to continue.';
-    status.textContent = msg;
-    markInvalid(el, status);
-    el.focus();
-  }
   nextBtn.addEventListener('click', function () {
-    var bad = firstInvalid(fsteps[cur]);
-    if (bad) return complain(bad);
+    // Continue: the messages sit at the fields; focus goes to the first one.
+    var bad = validateScope(fsteps[cur]);
+    if (bad.length) { bad[0].focus(); return; }
     show(cur + 1);
     form.scrollIntoView({ behavior: reduce.matches ? 'auto' : 'smooth', block: 'start' });
     focusStep();
@@ -482,8 +532,13 @@
     // Enter in a text field before the last step moves on instead of jumping ahead to an error.
     if (cur < fsteps.length - 1) { nextBtn.click(); return; }
     for (var k = 0; k < fsteps.length; k++) {
-      var bad = firstInvalid(fsteps[k]);
-      if (bad) { show(k); return complain(bad); }
+      var bad = validateScope(fsteps[k]);
+      if (bad.length) {
+        if (k !== cur) show(k);
+        setStatusError(status, summary(bad.length));
+        bad[0].focus();
+        return;
+      }
     }
     if (form.action.indexOf('YOUR_FORM_ID') !== -1) {
       status.classList.remove('error');

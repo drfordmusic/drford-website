@@ -537,3 +537,15 @@ main > section.section,main > section > .section{padding-block:var(--pad)}
   .progress i,.ab-progress span,.tl-bar i{background:Highlight;forced-color-adjust:none}
   .btn,.chip-btn,.tl-nav button,.play,.session-play{border:1px solid ButtonText}
 }
+
+/* ---------- Form errors at the field (November 17, 2026) ----------
+   Each problem field gets a thicker red outline and a message under it with an icon,
+   so color is never the only signal. Required fields say "(required)". */
+.req{color:var(--muted-2)}
+.choices.big legend .req{display:block;font-family:var(--sans);font-size:0.875rem;line-height:1.4;margin-top:4px}
+.field input[aria-invalid="true"],.field select[aria-invalid="true"],.field textarea[aria-invalid="true"]{border:2px solid #9A3324;padding:11px 13px}
+.field-error{display:flex;gap:8px;align-items:flex-start;margin:0;color:#9A3324;font-size:0.9375rem;line-height:1.4}
+.choices > .field-error{margin:-4px 0 12px}
+.field-error svg{flex:none;width:18px;height:18px;margin-top:1px}
+.form-status.error{display:flex;gap:8px;align-items:flex-start;line-height:1.4}
+.form-status.error svg{flex:none;width:18px;height:18px;margin-top:1px}
